@@ -27,12 +27,16 @@ COMANDOS = {
 }
 
 def listen_command():
-    """Escucha por micrófono y devuelve texto."""
     r = sr.Recognizer()
-    with sr.Microphone() as source:
+    with sr.Microphone(device_index=2, sample_rate=44100, chunk_size=1024) as source:
         print("Escuchando...")
-        r.pause_threshold = 1
-        audio = r.listen(source)
+        r.adjust_for_ambient_noise(source, duration=1)
+
+        try:
+            audio = r.listen(source, timeout=5, phrase_time_limit=5)
+        except sr.WaitTimeoutError:
+            print("No se detectó voz.")
+            return ""
 
     try:
         print("Reconociendo...")
@@ -45,6 +49,7 @@ def listen_command():
     except sr.RequestError as e:
         print(f"Error en el servicio de Google: {e}")
         return ""
+
 
 def send_command_to_arduino(command_key):
     """Enviar número correspondiente al Arduino."""
